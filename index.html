@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f2ed">
+  <title>Oficina XML | Gerador fiscal fictício</title>
+  <link rel="stylesheet" href="enhancements.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f3f2ed;
+      --panel: #fffefa;
+      --ink: #202923;
+      --muted: #72796f;
+      --line: #d9ddd3;
+      --green: #315c48;
+      --green-dark: #224433;
+      --lime: #d5e5a8;
+      --coral: #bf6047;
+      --mono: "Cascadia Code", Consolas, monospace;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--paper);
+      background-image: radial-gradient(#c9cec1 0.65px, transparent 0.65px);
+      background-size: 14px 14px;
+      color: var(--ink);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    button { font: inherit; }
+    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; letter-spacing: .02em; }
+    .brand-mark {
+      display: grid;
+      width: 31px;
+      height: 31px;
+      place-items: center;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 1;
+    }
+    .local-tag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green-dark);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .local-tag::before { width: 8px; height: 8px; border-radius: 50%; background: #71954d; content: ""; }
+    main { padding: 48px 0 64px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .eyebrow { margin: 0 0 10px; color: var(--coral); font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-family: var(--serif); font-size: clamp(36px, 5vw, 54px); font-weight: 400; letter-spacing: 0; line-height: 1; }
+    .intro-copy { max-width: 300px; margin: 0 0 2px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+    .workspace { display: grid; grid-template-columns: 350px minmax(0, 1fr); min-height: 520px; border: 1px solid var(--line); background: var(--panel); }
+    .controls { padding: 24px; border-right: 1px solid var(--line); }
+    .section-label { display: flex; align-items: center; justify-content: space-between; margin: 0 0 12px; color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 27px; }
+    .tab {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+    }
+    .tab:hover { border-color: var(--green); }
+    .tab[aria-pressed="true"] { border-color: var(--green); background: var(--green); color: white; }
+    .sample-info { min-height: 92px; padding: 15px 0 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .sample-title { margin: 0 0 7px; font-family: var(--serif); font-size: 21px; font-weight: 400; }
+    .sample-description { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .meta { display: grid; gap: 12px; padding: 19px 0 22px; }
+    .meta-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
+    .meta-row span:first-child { color: var(--muted); }
+    .meta-row span:last-child { text-align: right; font-family: var(--mono); font-size: 11px; }
+    .actions { display: grid; gap: 9px; }
+    .primary, .secondary {
+      display: flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border: 1px solid var(--green);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background-color .16s ease, transform .16s ease;
+    }
+    .primary { background: var(--green); color: #fff; }
+    .primary:hover { background: var(--green-dark); }
+    .secondary { background: transparent; color: var(--green-dark); }
+    .secondary:hover { background: #eef2e8; }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid var(--lime); outline-offset: 2px; }
+    .button-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+
+    .preview { display: flex; min-width: 0; flex-direction: column; }
+    .preview-head { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--line); }
+    .preview-heading { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 12px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+    .file-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--coral); }
+    .file-name { overflow: hidden; color: var(--muted); font-family: var(--mono); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .code-wrap { position: relative; flex: 1; min-height: 430px; background: #fbfcf8; }
+    pre { height: 100%; min-height: 430px; margin: 0; overflow: auto; padding: 22px 24px; color: #35473b; font-family: var(--mono); font-size: 11px; line-height: 1.75; tab-size: 2; white-space: pre; }
+    .xml-note { display: flex; align-items: flex-start; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--line); color: #725139; background: #fbf5e9; font-size: 11px; line-height: 1.5; }
+    .xml-note strong { color: #67432d; }
+    .note-icon { flex: 0 0 auto; width: 15px; height: 15px; border: 1px solid currentColor; border-radius: 50%; text-align: center; font-family: var(--serif); font-size: 11px; font-weight: 700; line-height: 14px; }
+    .footer { display: flex; justify-content: space-between; gap: 20px; padding-top: 17px; color: var(--muted); font-size: 11px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; max-width: min(360px, calc(100vw - 44px)); padding: 12px 16px; background: var(--green-dark); color: white; font-size: 13px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease; }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 28px, 560px); }
+      main { padding-top: 34px; }
+      .intro { align-items: flex-start; flex-direction: column; }
+      .intro-copy { max-width: 460px; }
+      .workspace { grid-template-columns: 1fr; }
+      .controls { border-right: 0; border-bottom: 1px solid var(--line); }
+      .meta { grid-template-columns: 1fr 1fr; }
+      .code-wrap, pre { min-height: 360px; }
+    }
+    @media (max-width: 430px) {
+      .topbar { min-height: 64px; }
+      .local-tag { font-size: 10px; }
+      .controls { padding: 19px; }
+      .preview-head { padding: 0 15px; }
+      pre { padding: 16px; font-size: 10px; }
+      .footer { flex-direction: column; gap: 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">{ }</span><span>Oficina XML</span></div>
+      <div class="local-tag">Local · sem transmissão à SEFAZ</div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Bancada de testes · Brasil</p>
+          <h1 id="page-title">Documentos<br>para teste.</h1>
+        </div>
+        <p class="intro-copy">Monte XMLs fictícios, associe documentos de transporte e confira a prévia antes de exportar. Nenhum documento é transmitido.</p>
+      </section>
+
+      <section class="workspace" aria-label="Gerador de documentos fiscais">
+        <aside class="controls">
+          <p class="section-label"><span>01 / Tipo de documento</span><span>4 opções</span></p>
+          <div class="tabs" role="group" aria-label="Tipo de documento">
+            <button class="tab" data-type="nfe" aria-pressed="true">NF-e</button>
+            <button class="tab" data-type="cte" aria-pressed="false">CT-e</button>
+            <button class="tab" data-type="nfse" aria-pressed="false">NFS-e</button>
+            <button class="tab" data-type="mdfe" aria-pressed="false">MDF-e</button>
+          </div>
+
+          <p class="section-label"><span>02 / Amostra atual</span><span id="sample-number">#0001</span></p>
+          <div class="sample-info">
+            <h2 class="sample-title" id="document-title">Nota Fiscal Eletrônica</h2>
+            <p class="sample-description" id="document-description">Venda fictícia de produto, modelo 55, leiaute de referência 4.00.</p>
+          </div>
+          <div class="meta" aria-live="polite">
+            <div class="meta-row"><span>Ambiente</span><span>TESTE / sem transmissão</span></div>
+            <div class="meta-row"><span>Identificação</span><span id="document-id">Aguardando geração</span></div>
+            <div class="meta-row"><span>Validação</span><span id="validation-status">XML bem formado</span></div>
+          </div>
+          <div class="actions">
+            <button class="primary" id="generate-button">
+              <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v3M10 14.5v3M2.5 10h3M14.5 10h3M4.7 4.7l2.1 2.1m6.4 6.4 2.1 2.1m0-10.6-2.1 2.1m-6.4 6.4-2.1 2.1"/><circle cx="10" cy="10" r="3.2"/></svg>
+              Salvar rascunho numerado
+            </button>
+            <button class="secondary" id="download-button">
+              <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v10m-3.5-3.5L10 12.5l3.5-3.5M3.5 14v3h13v-3"/></svg>
+              Baixar XML
+            </button>
+          </div>
+        </aside>
+
+        <section class="preview" aria-label="Pré-visualização do XML">
+          <div class="preview-head">
+            <h2 class="preview-heading"><span class="file-dot" aria-hidden="true"></span>Pré-visualização</h2>
+            <span class="file-name" id="file-name">amostra-nfe.xml</span>
+          </div>
+          <div class="code-wrap"><pre><code id="xml-output" aria-live="polite"></code></pre></div>
+          <div class="xml-note"><span class="note-icon" aria-hidden="true">!</span><span><strong>Somente para testes.</strong> XML demonstrativo, não assinado e sem validade fiscal. Os leiautes podem exigir ajustes para o schema e sistema de destino.</span></div>
+        </section>
+      </section>
+      <footer class="footer"><span>Geração e validação locais · localidades consultadas no IBGE</span><span>Uso exclusivo em ambiente de testes</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const samples = {
+        nfe: {
+          title: "Nota Fiscal Eletrônica",
+          description: "Venda fictícia de produto, modelo 55, leiaute de referência 4.00.",
+          build: (n, date) => {
+            const key = accessKey("35", "55", n);
+            return `<NFe xmlns="http://www.portalfiscal.inf.br/nfe">\n  <infNFe Id="NFe${key}" versao="4.00">\n    <ide>\n      <cUF>35</cUF><cNF>${String(n).padStart(8, "0")}</cNF><natOp>VENDA DE MERCADORIA - TESTE</natOp>\n      <mod>55</mod><serie>1</serie><nNF>${n}</nNF><dhEmi>${date}</dhEmi><tpNF>1</tpNF><idDest>1</idDest>\n      <cMunFG>3550308</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>${key.slice(-1)}</cDV><tpAmb>2</tpAmb>\n      <finNFe>1</finNFe><indFinal>1</indFinal><indPres>1</indPres><procEmi>0</procEmi><verProc>OficinaXML-1.0</verProc>\n    </ide>\n    <emit>\n      <CNPJ>00000000000000</CNPJ><xNome>EMITENTE FICTICIO TESTE</xNome><enderEmit><xLgr>Rua de Teste</xLgr><nro>0</nro><xBairro>BAIRRO FICTICIO</xBairro><cMun>3550308</cMun><xMun>SAO PAULO</xMun><UF>SP</UF><CEP>00000000</CEP><cPais>1058</cPais><xPais>BRASIL</xPais><fone>0000000000</fone></enderEmit>\n      <IE>ISENTO</IE><CRT>3</CRT>\n    </emit>\n    <dest>\n      <CNPJ>11111111111111</CNPJ><xNome>DESTINATARIO FICTICIO TESTE</xNome><enderDest><xLgr>Avenida Exemplo</xLgr><nro>100</nro><xBairro>BAIRRO FICTICIO</xBairro><cMun>3550308</cMun><xMun>SAO PAULO</xMun><UF>SP</UF><CEP>11111111</CEP><cPais>1058</cPais><xPais>BRASIL</xPais></enderDest>\n      <indIEDest>9</indIEDest>\n    </dest>\n    <det nItem="1"><prod><cProd>TESTE-001</cProd><cEAN>SEM GTIN</cEAN><xProd>PRODUTO FICTICIO PARA TESTE</xProd><NCM>00000000</NCM><CFOP>5102</CFOP><uCom>UN</uCom><qCom>1.0000</qCom><vUnCom>100.00</vUnCom><vProd>100.00</vProd><cEANTrib>SEM GTIN</cEANTrib><uTrib>UN</uTrib><qTrib>1.0000</qTrib><vUnTrib>100.00</vUnTrib><indTot>1</indTot></prod><imposto><vTotTrib>0.00</vTotTrib><ICMS><ICMS40><orig>0</orig><CST>40</CST></ICMS40></ICMS><PIS><PISNT><CST>07</CST></PISNT></PIS><COFINS><COFINSNT><CST>07</CST></COFINSNT></COFINS></imposto></det>\n    <total><ICMSTot><vBC>0.00</vBC><vICMS>0.00</vICMS><vICMSDeson>0.00</vICMSDeson><vFCP>0.00</vFCP><vBCST>0.00</vBCST><vST>0.00</vST><vFCPST>0.00</vFCPST><vFCPSTRet>0.00</vFCPSTRet><vProd>100.00</vProd><vFrete>0.00</vFrete><vSeg>0.00</vSeg><vDesc>0.00</vDesc><vII>0.00</vII><vIPI>0.00</vIPI><vIPIDevol>0.00</vIPIDevol><vPIS>0.00</vPIS><vCOFINS>0.00</vCOFINS><vOutro>0.00</vOutro><vNF>100.00</vNF><vTotTrib>0.00</vTotTrib></ICMSTot></total>\n    <transp><modFrete>9</modFrete></transp><pag><detPag><indPag>0</indPag><tPag>99</tPag><xPag>SEM PAGAMENTO REAL - TESTE</xPag><vPag>100.00</vPag></detPag></pag>\n    <infAdic><infCpl>DOCUMENTO FICTICIO PARA TESTE - SEM VALIDADE FISCAL - NAO ENVIAR A SEFAZ.</infCpl></infAdic>\n  </infNFe>\n</NFe>`;
+          }
+        },
+        cte: {
+          title: "Conhecimento de Transporte",
+          description: "Prestação fictícia de transporte rodoviário, modelo 57, leiaute de referência 4.00.",
+          build: (n, date) => {
+            const key = accessKey("35", "57", n);
+            return `<CTe xmlns="http://www.portalfiscal.inf.br/cte">\n  <infCte Id="CTe${key}" versao="4.00">\n    <ide>\n      <cUF>35</cUF><cCT>${String(n).padStart(8, "0")}</cCT><CFOP>6353</CFOP><natOp>PRESTACAO DE SERVICO DE TRANSPORTE - TESTE</natOp><mod>57</mod>\n      <serie>1</serie><nCT>${n}</nCT><dhEmi>${date}</dhEmi><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>${key.slice(-1)}</cDV><tpAmb>2</tpAmb><tpCTe>0</tpCTe><procEmi>0</procEmi><verProc>OficinaXML-1.0</verProc>\n      <cMunEnv>3550308</cMunEnv><xMunEnv>SAO PAULO</xMunEnv><UFEnv>SP</UFEnv><modal>01</modal><tpServ>0</tpServ><cMunIni>3550308</cMunIni><xMunIni>SAO PAULO</xMunIni><UFIni>SP</UFIni><cMunFim>3304557</cMunFim><xMunFim>RIO DE JANEIRO</xMunFim><UFFim>RJ</UFFim><retira>1</retira><indIEToma>9</indIEToma>\n    </ide>\n    <emit><CNPJ>00000000000000</CNPJ><IE>ISENTO</IE><xNome>TRANSPORTADORA FICTICIA TESTE</xNome><enderEmit><xLgr>Rua de Teste</xLgr><nro>0</nro><xBairro>BAIRRO FICTICIO</xBairro><cMun>3550308</cMun><xMun>SAO PAULO</xMun><CEP>00000000</CEP><UF>SP</UF><fone>0000000000</fone></enderEmit><CRT>3</CRT></emit>\n    <rem><CNPJ>11111111111111</CNPJ><IE>ISENTO</IE><xNome>REMETENTE FICTICIO TESTE</xNome><enderReme><xLgr>Rua de Teste</xLgr><nro>0</nro><xBairro>BAIRRO FICTICIO</xBairro><cMun>3550308</cMun><xMun>SAO PAULO</xMun><CEP>00000000</CEP><UF>SP</UF><cPais>1058</cPais><xPais>BRASIL</xPais></enderReme></rem>\n    <dest><CNPJ>22222222222222</CNPJ><IE>ISENTO</IE><xNome>DESTINATARIO FICTICIO TESTE</xNome><enderDest><xLgr>Avenida Exemplo</xLgr><nro>100</nro><xBairro>BAIRRO FICTICIO</xBairro><cMun>3304557</cMun><xMun>RIO DE JANEIRO</xMun><CEP>11111111</CEP><UF>RJ</UF><cPais>1058</cPais><xPais>BRASIL</xPais></enderDest></dest>\n    <vPrest><vTPrest>250.00</vTPrest><vRec>250.00</vRec><Comp><xNome>FRETE FICTICIO</xNome><vComp>250.00</vComp></Comp></vPrest>\n    <imp><ICMS><ICMS45><CST>40</CST></ICMS45></ICMS><vTotTrib>0.00</vTotTrib></imp>\n    <infCTeNorm><infCarga><vCarga>500.00</vCarga><proPred>VOLUME FICTICIO</proPred><xOutCat>AMOSTRA DE TESTE</xOutCat><infQ><cUnid>01</cUnid><tpMed>UNIDADE</tpMed><qCarga>1.0000</qCarga></infQ></infCarga><infDoc><infNFe><chave>${accessKey("35", "55", n + 10)}</chave></infNFe></infDoc><infModal versaoModal="4.00"><rodo><RNTRC>00000000</RNTRC></rodo></infModal></infCTeNorm>\n    <infCteSupl><qrCodCTe>https://example.invalid/cte-test</qrCodCTe></infCteSupl>\n    <infAdic><infCpl>DOCUMENTO FICTICIO PARA TESTE - SEM VALIDADE FISCAL - NAO ENVIAR A SEFAZ.</infCpl></infAdic>\n  </infCte>\n</CTe>`;
+          }
+        },
+        nfse: {
+          title: "Nota Fiscal de Serviço",
+          description: "Prestação fictícia em estrutura de referência ABRASF 2.04; o padrão varia por município.",
+          build: (n, date) => {
+            const [day] = date.split("T");
+            return `<EnviarLoteRpsEnvio xmlns="http://www.abrasf.org.br/nfse.xsd">\n  <LoteRps Id="L${String(n).padStart(10, "0")}" versao="2.04">\n    <NumeroLote>${n}</NumeroLote><CpfCnpj><Cnpj>00000000000000</Cnpj></CpfCnpj><InscricaoMunicipal>00000000</InscricaoMunicipal><QuantidadeRps>1</QuantidadeRps>\n    <ListaRps><Rps><InfDeclaracaoPrestacaoServico Id="R${String(n).padStart(10, "0")}">\n      <Rps><IdentificacaoRps><Numero>${n}</Numero><Serie>TESTE</Serie><Tipo>1</Tipo></IdentificacaoRps><DataEmissao>${day}</DataEmissao><Status>1</Status></Rps>\n      < competencia>${day.slice(0, 7)}</competencia>\n      <Servico><Valores><ValorServicos>150.00</ValorServicos><ValorDeducoes>0.00</ValorDeducoes><ValorPis>0.00</ValorPis><ValorCofins>0.00</ValorCofins><ValorInss>0.00</ValorInss><ValorIr>0.00</ValorIr><ValorCsll>0.00</ValorCsll><IssRetido>2</IssRetido><ValorIss>0.00</ValorIss><Aliquota>0.0500</Aliquota><DescontoIncondicionado>0.00</DescontoIncondicionado><DescontoCondicionado>0.00</DescontoCondicionado></Valores><ItemListaServico>01.01</ItemListaServico><CodigoCnae>6201500</CodigoCnae><Discriminacao>SERVICO FICTICIO DE TESTE - SEM PRESTACAO REAL</Discriminacao><CodigoMunicipio>3550308</CodigoMunicipio><ExigibilidadeISS>1</ExigibilidadeISS><MunicipioIncidencia>3550308</MunicipioIncidencia></Servico>\n      <Prestador><CpfCnpj><Cnpj>00000000000000</Cnpj></CpfCnpj><InscricaoMunicipal>00000000</InscricaoMunicipal></Prestador>\n      <Tomador><IdentificacaoTomador><CpfCnpj><Cnpj>11111111111111</Cnpj></CpfCnpj></IdentificacaoTomador><RazaoSocial>CLIENTE FICTICIO TESTE</RazaoSocial><Endereco><Endereco>Rua de Teste</Endereco><Numero>0</Numero><Bairro>BAIRRO FICTICIO</Bairro><CodigoMunicipio>3550308</CodigoMunicipio><Uf>SP</Uf><Cep>00000000</Cep></Endereco></Tomador>\n      <OptanteSimplesNacional>2</OptanteSimplesNacional><IncentivoFiscal>2</IncentivoFiscal>\n    </InfDeclaracaoPrestacaoServico></Rps></ListaRps>\n  </LoteRps>\n</EnviarLoteRpsEnvio>`;
+          }
+        },
+        mdfe: {
+          title: "Manifesto de Documentos Fiscais",
+          description: "Manifesto fictício de transporte rodoviário, modelo 58, leiaute de referência 3.00.",
+          build: (n, date) => {
+            const key = accessKey("35", "58", n);
+            return `<MDFe xmlns="http://www.portalfiscal.inf.br/mdfe">\n  <infMDFe Id="MDFe${key}" versao="3.00">\n    <ide>\n      <cUF>35</cUF><tpAmb>2</tpAmb><tpEmit>1</tpEmit><tpTransp>1</tpTransp><mod>58</mod><serie>1</serie><nMDF>${n}</nMDF><cMDF>${String(n).padStart(8, "0")}</cMDF><cDV>${key.slice(-1)}</cDV>\n      <modal>1</modal><dhEmi>${date}</dhEmi><tpEmis>1</tpEmis><procEmi>0</procEmi><verProc>OficinaXML-1.0</verProc><UFIni>SP</UFIni><UFFim>RJ</UFFim><infMunCarrega><cMunCarrega>3550308</cMunCarrega><xMunCarrega>SAO PAULO</xMunCarrega></infMunCarrega><dhIniViagem>${date}</dhIniViagem>\n    </ide>\n    <emit><CNPJ>00000000000000</CNPJ><IE>ISENTO</IE><xNome>TRANSPORTADORA FICTICIA TESTE</xNome><xFant>TRANSPORTADORA TESTE</xFant><enderEmit><xLgr>Rua de Teste</xLgr><nro>0</nro><xBairro>BAIRRO FICTICIO</xBairro><cMun>3550308</cMun><xMun>SAO PAULO</xMun><CEP>00000000</CEP><UF>SP</UF><fone>0000000000</fone><email>teste@example.invalid</email></enderEmit></emit>\n    <infModal versaoModal="3.00"><rodo><infANTT><RNTRC>00000000</RNTRC></infANTT><veicTracao><cInt>VEICULO-TESTE</cInt><placa>XXX0X00</placa><tara>0</tara><capKG>0</capKG><capM3>0</capM3><prop><CPF>00000000000</CPF><xNome>PROPRIETARIO FICTICIO</xNome><IE>ISENTO</IE><UF>SP</UF><tpProp>2</tpProp></prop><condutor><xNome>MOTORISTA FICTICIO</xNome><CPF>00000000000</CPF></condutor><tpRod>06</tpRod><tp 정>02</tp 정></veicTracao></rodo></infModal>\n    <infDoc><infMunDescarga><cMunDescarga>3304557</cMunDescarga><xMunDescarga>RIO DE JANEIRO</xMunDescarga><infCTe><chCTe>${accessKey("35", "57", n + 20)}</chCTe></infCTe><infNFe><chNFe>${accessKey("35", "55", n + 10)}</chNFe></infNFe></infMunDescarga></infDoc>\n    <seg><infResp><respSeg>2</respSeg><CNPJ>00000000000000</CNPJ></infResp><infSeg><xSeg>SEGURADORA FICTICIA</xSeg><CNPJ>00000000000000</CNPJ></infSeg><nApol>APOLICE-TESTE-000</nApol><nAver>AVERBACAO-TESTE-000</nAver></seg>\n    <prodPred><tpCarga>05</tpCarga><xProd>PRODUTO FICTICIO PARA TESTE</xProd><NCM>00000000</NCM><infLotacao><infLocalCarrega><CEP>00000000</CEP></infLocalCarrega><infLocalDescarrega><CEP>11111111</CEP></infLocalDescarrega></infLotacao></prodPred>\n    <tot><qCTe>1</qCTe><v carga="500.00"/></tot>\n    <infAdic><infCpl>DOCUMENTO FICTICIO PARA TESTE - SEM VALIDADE FISCAL - NAO ENVIAR A SEFAZ.</infCpl></infAdic>\n  </infMDFe>\n</MDFe>`;
+          }
+        }
+      };
+
+      const state = { type: "nfe", number: 1, xml: "" };
+      window.oficinaState = state;
+      const output = document.getElementById("xml-output");
+      const toast = document.getElementById("toast");
+      let toastTimer;
+
+      function escapeXml(value) {
+        return String(value).replace(/[<>&"']/g, (char) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[char]);
+      }
+
+      function checkDigit(base) {
+        let weight = 2;
+        let sum = 0;
+        for (let index = base.length - 1; index >= 0; index -= 1) {
+          sum += Number(base[index]) * weight;
+          weight = weight === 9 ? 2 : weight + 1;
+        }
+        const remainder = sum % 11;
+        return remainder < 2 ? 0 : 11 - remainder;
+      }
+
+      function accessKey(uf, model, number) {
+        const now = new Date();
+        const aamm = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}`;
+        const base = `${uf}${aamm}00000000000000${model}001${String(number).padStart(9, "0")}1${String(number).padStart(8, "0")}`;
+        return `${base}${checkDigit(base)}`;
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
+      }
+
+      function render() {
+        const sample = samples[state.type];
+        const currentDate = new Date().toISOString().replace(/\.\d{3}Z$/, "-03:00");
+        state.xml = `<?xml version="1.0" encoding="UTF-8"?>\n${sample.build(state.number, currentDate)}`;
+        state.xml = state.xml.replace("< competencia>", "<Competencia>").replace("</competencia>", "</Competencia>").replaceAll("<tp 정>", "<tpCar>").replaceAll("</tp 정>", "</tpCar>").replace('<v carga="500.00"/>', "<vCarga>500.00</vCarga>");
+        document.getElementById("document-title").textContent = sample.title;
+        document.getElementById("document-description").textContent = sample.description;
+        document.getElementById("sample-number").textContent = `#${String(state.number).padStart(4, "0")}`;
+        document.getElementById("document-id").textContent = `${state.type.toUpperCase()}-${String(state.number).padStart(8, "0")}`;
+        document.getElementById("file-name").textContent = `amostra-${state.type}-${String(state.number).padStart(4, "0")}.xml`;
+        output.textContent = state.xml;
+        const parsed = new DOMParser().parseFromString(state.xml, "application/xml");
+        const malformed = parsed.querySelector("parsererror");
+        document.getElementById("validation-status").textContent = malformed ? "XML inválido" : "XML bem formado";
+        document.getElementById("validation-status").style.color = malformed ? "#a33328" : "#315c48";
+      }
+      window.oficinaRender = render;
+
+      document.querySelectorAll(".tab").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.type = button.dataset.type;
+          state.number = 1;
+          document.querySelectorAll(".tab").forEach((tab) => tab.setAttribute("aria-pressed", String(tab === button)));
+          render();
+        });
+      });
+
+      document.getElementById("generate-button").addEventListener("click", () => {
+        state.number += 1;
+        render();
+        showToast("Nova amostra fictícia gerada no navegador.");
+      });
+
+      document.getElementById("download-button").addEventListener("click", () => {
+        const blob = new Blob([state.xml], { type: "application/xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `amostra-${state.type}-${String(state.number).padStart(4, "0")}.xml`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast("XML fictício baixado.");
+      });
+
+      render();
+    })();
+  </script>
+  <script src="cloudflare-config.js" defer></script>
+  <script src="enhancements.js" defer></script>
+</body>
+</html>
