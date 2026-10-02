@@ -1,3 +1,3 @@
 window.oficinaCloudflareConfig = {
-  apiBaseUrl: "https://oficina-xml.workers.dev"
+  apiBaseUrl: "https://oficina-xml-api.oficina-xml.workers.dev"
 };
